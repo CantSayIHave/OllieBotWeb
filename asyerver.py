@@ -7,7 +7,7 @@ from response import Response
 import http
 
 
-class EchoHandler(asyncore.dispatcher_with_send):
+class SocketHandler(asyncore.dispatcher_with_send):
     def handle_read(self):
         data = self.recv(8192)
         if data:
@@ -41,7 +41,7 @@ class EchoHandler(asyncore.dispatcher_with_send):
         self.close()
 
 
-class EchoServer(asyncore.dispatcher):
+class SocketServer(asyncore.dispatcher):
     def __init__(self, host, port):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -54,10 +54,10 @@ class EchoServer(asyncore.dispatcher):
         if pair is not None:
             sock, addr = pair
             print('Incoming connection from %s' % repr(addr))
-            handler = EchoHandler(sock)
+            handler = SocketHandler(sock)
 
 
-server = EchoServer('', 80)
+server = SocketServer('', 80)
 try:
     asyncore.loop()
 except KeyboardInterrupt:
