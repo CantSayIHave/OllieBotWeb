@@ -7,3 +7,5 @@ This server provides an informative website for the Discord bot OllieBot, as wel
 # Design
 This is by no means the easiest way to build a server, but it serves as an educational "reinventing-the-wheel" type of project and also allows full control over content and functionality.
 Suggestions are welcome, but may not be implemented.
+
+The top-level file is <a href="https://github.com/CantSayIHave/OllieBotWeb/edit/master/asyerver.py">asyerver.py</a>
