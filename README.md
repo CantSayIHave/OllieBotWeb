@@ -5,7 +5,7 @@ A simple socket server for the domain <a href="https://olliebot.cc">olliebot.cc<
 This server provides an informative website for the Discord bot OllieBot, as well as content hosting and media processing. Https will be added soon, but it's not a top priority, as this site handles no sensitive information currently.
 
 # Design
-This is by no means the easiest way to build a server, but it serves as an educational "reinventing-the-wheel" type of project and also allows full control over content and functionality.
-Suggestions are welcome, but may not be implemented.
+This server is a simple asyncronous socket i/o system. You may notice I'm writing the http myself, and that's mostly for fun/learning.
+Suggestions are welcome.
 
 The top-level file is <a href="https://github.com/CantSayIHave/OllieBotWeb/blob/master/asyerver.py">asyerver.py</a>
