@@ -7,4 +7,5 @@ menu_mapping = {'commands': 'html/commands.html',
                 'about': 'html/about.html',
                 'status': 'html/status.html',
                 'contact': 'html/contact.html',
+                'thinking': 'thinking',
                 '': ''}

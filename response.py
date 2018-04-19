@@ -17,6 +17,9 @@ class Response:
     def __bytes__(self):
         return self.read()
 
+    def __len__(self):
+        return len(self.file_bytes)
+
     def content_type(self, c_type: str = http.HTML):
         self.params['Content-Type'] = c_type
         return self
@@ -37,6 +40,11 @@ class Response:
     def add_content_length(self):
         if self.file_bytes:
             self.params['Content-Length'] = len(self.file_bytes)
+        print('added content length')
+        return self
+
+    def chunked(self):
+        self.params['Transfer-Encoding'] = 'chunked'
         return self
 
     def encoding(self, enc: str):
@@ -57,13 +65,19 @@ class Response:
         self.params['Content-Disposition'] = 'inline; filename="{}"'.format(name)
         return self
 
+    def set_location(self, url):
+        self.params['Location'] = url
+        return self
+
     def read(self):
         header = 'HTTP/1.1 {}\n'.format(self.status)
 
         for p_name, p_value in self.params.items():
-            header += '{}: {}\n'.format(p_name, p_value)
+            header += '{}: {}\r\n'.format(p_name, p_value)
 
-        header += '\n'
+        header += '\r\n'
+
+        print("Outgoing Header:\n{}".format(header))
 
         out = bytes(header, 'utf-8')
 
@@ -71,4 +85,16 @@ class Response:
             out += self.file_bytes
 
         return out
+
+    def read_header(self):
+        header = 'HTTP/1.1 {}\n'.format(self.status)
+
+        for p_name, p_value in self.params.items():
+            header += '{}: {}\r\n'.format(p_name, p_value)
+
+        header += '\r\n'
+
+        print("Outgoing Header:\n{}".format(header))
+
+        return bytes(header, 'utf-8')
 

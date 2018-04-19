@@ -17,5 +17,6 @@ class Request:
         self.connection = http_pull_tag('Connection', raw_text)
         self.accept = http_pull_tag('Accept', raw_text)
         self.referer = http_pull_tag('Referer', raw_text)
+        self.user_agent = http_pull_tag('User-Agent', raw_text)
 
 

@@ -1,5 +1,9 @@
 import asyncore
 import socket
+import ssl
+
+import time
+
 from subdomains.core import get_subdomain_handler
 from request import Request
 from globals import *
@@ -7,9 +11,15 @@ from response import Response
 import http
 
 
-class SocketHandler(asyncore.dispatcher_with_send):
+RECV_CHUNK = 8192
+SEND_CHUNK = 55000
+
+
+class SocketHandler(asyncore.dispatcher):
+    buffer = b''
+
     def handle_read(self):
-        data = self.recv(8192)
+        data = self.recv(RECV_CHUNK)
         if data:
             raw = data.decode('utf-8')
             print(raw)
@@ -39,6 +49,64 @@ class SocketHandler(asyncore.dispatcher_with_send):
                 self.send(resp.read())
 
         self.close()
+
+    # def handle_write(self):
+    #     data = self.buffer
+    #     sent = self.send(data[:SEND_CHUNK])
+    #
+    #     while sent < len(data):
+    #         if sent == 0:
+    #             self.handle_close()
+    #             return 0
+    #         sent = self.send(data[sent:sent + SEND_CHUNK])
+    #     return sent
+
+    def write(self, data):
+        self.buffer += data
+
+    def writable(self):
+        return bool(len(self.buffer))
+
+    def write_chunked(self, resp: Response):
+        sent = self.send(resp.read_header())
+
+        if sent == 0:
+            self.handle_close()
+            return 0
+
+        total_sent = sent
+        sent = 0
+
+        while sent < len(resp):
+            result = self.send(self.build_chunk(resp.file_bytes[sent:sent + SEND_CHUNK]))
+            if result == 0:
+                self.handle_close()
+                return 0
+            sent += SEND_CHUNK
+
+        total_sent += sent
+
+        sent = self.send(self.build_chunk(b''))
+
+        return sent + total_sent
+
+    @staticmethod
+    def build_chunk(data):
+        size = hex(len(data))[2:]
+        return bytes(size, 'utf-8') + b'\r\n' + data + b'\r\n'
+
+    def handle_write(self):
+        data = self.buffer
+        sent = self.send(data)
+        while sent < len(data):
+            if sent == 0:
+                self.handle_close()
+                return 0
+            sent = self.send(data[sent:])
+        self.flush()
+
+    def flush(self):
+        self.buffer = b''
 
 
 class SocketServer(asyncore.dispatcher):

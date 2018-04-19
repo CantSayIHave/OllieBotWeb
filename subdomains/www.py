@@ -13,10 +13,13 @@ class SubdomainWWW:
 
         if any([x in self.request.query for x in ['html', 'css', 'image', 'ico']]):
             q = self.request.query
-        else:
+        elif self.request.query in menu_mapping:
             q = menu_mapping[self.request.query]  # type: str
+        else:
+            q = self.request.query
         # q = self.request.query
-
+        if 'discordapp' in self.request.raw:
+            raise http.NotFoundError('Not Found.')
         # send default html file
         if not q:
 
@@ -43,14 +46,31 @@ class SubdomainWWW:
             else:
                 raise(ValueError('bad file type request'))
 
-            resp = response.Response().content_type(resp_type).set_file(q)
+            resp = response.Response().content_type(resp_type).set_file(q).chunked()
 
-            self.socket.send(resp.read())
+            out_bytes = bytes(resp)
+
+            sent = self.socket.write_chunked(resp)
+            print('\nlength of out_bytes:{}\nlength of sent:{}'.format(len(out_bytes), sent))
 
         elif q == 'favicon.ico':
             resp = response.Response().content_type(http.PNG).set_file('favicon.png')
 
             self.socket.send(resp.read())
+
+        elif q.startswith('google'):
+            resp = response\
+                .Response()\
+                .content_type(http.HTML)\
+                .set_filename('google25abf33f5985d2fc.html')\
+                .set_file('google25abf33f5985d2fc.html')
+
+            self.socket.send(resp.read())
+
+        elif q.startswith('think'):  # it would make you think, in fact
+            resp = response.Response(status=http.FOUND).set_location('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+
+            self.socket.send(bytes(resp))
 
         else:
             raise(http.NotFoundError('bad request'))
