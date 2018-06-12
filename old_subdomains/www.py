@@ -18,8 +18,6 @@ class SubdomainWWW:
         else:
             q = self.request.query
         # q = self.request.query
-        if 'discordapp' in self.request.raw:
-            raise http.NotFoundError('Not Found.')
         # send default html file
         if not q:
 
@@ -46,11 +44,11 @@ class SubdomainWWW:
             else:
                 raise(ValueError('bad file type request'))
 
-            resp = response.Response().content_type(resp_type).set_file(q).chunked()
+            resp = response.Response().content_type(resp_type).set_file(q)#.chunked()
 
             out_bytes = bytes(resp)
 
-            sent = self.socket.write_chunked(resp)
+            sent = self.socket.send(resp.read())
             print('\nlength of out_bytes:{}\nlength of sent:{}'.format(len(out_bytes), sent))
 
         elif q == 'favicon.ico':

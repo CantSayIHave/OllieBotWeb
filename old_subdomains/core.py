@@ -4,15 +4,14 @@
 # houses subdomain handler classes
 
 
-from globals import *
-from request import Request
-from mappings import *
-import response
 import http
-from subdomains.www import SubdomainWWW
+
 from subdomains.bot import SubdomainBOT
-from subdomains.rss import SubdomainRSS
 from subdomains.cdn import SubdomainCDN
+from subdomains.rss import SubdomainRSS
+
+from old_subdomains.www import SubdomainWWW
+from request import Request
 
 
 def get_subdomain_handler(request: Request, socket):
