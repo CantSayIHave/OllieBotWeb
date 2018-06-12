@@ -1,19 +1,15 @@
 import asyncore
 import socket
-import ssl
+from http import server
 
-import time
-
-from subdomains.core import get_subdomain_handler
+from old_subdomains.core import get_subdomain_handler
 from request import Request
-from globals import *
 from response import Response
-import http
-
 
 RECV_CHUNK = 8192
 SEND_CHUNK = 55000
 
+server.BaseHTTPRequestHandler
 
 class SocketHandler(asyncore.dispatcher):
     buffer = b''
