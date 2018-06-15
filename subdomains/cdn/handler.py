@@ -36,14 +36,3 @@ class CDNHandler(SubdomainHandler):
     def check_file(self):
         if not self.t_path.exists():
             raise HTTPException(HTTPStatus.NOT_FOUND, explain='No file "{}" was found.'.format(self.t_path.resource))
-
-    def send_headers(self, file: File):
-        """Adds appropriate headers based on file"""
-
-        content_type = self.extensions_map['.' + file.type]
-
-        self.send_header('Content-Type', content_type)
-        self.send_header('Content-Length', file.size)
-        self.send_header('Last-Modified', self.date_time_string(file.time))
-        self.send_header('Content-Disposition', 'inline; filename="{}"'.format(file.name))
-        self.end_headers()
