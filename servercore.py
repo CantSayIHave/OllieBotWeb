@@ -9,7 +9,7 @@ import io
 from server.util import *
 from server.exceptions import *
 import server
-from subdomains import www, bot
+from subdomains import www, bot, cdn
 
 
 class ServerCoreHandler(BaseHTTPRequestHandler):
@@ -48,7 +48,7 @@ class ServerCoreHandler(BaseHTTPRequestHandler):
         if 'Host' in self.headers:
             host = self.headers['Host']
         else:
-            host = 'www.{}'.format(server.domain_name)
+            host = 'www.{}'.format(server.domain_name)  # assume www
 
         subdomain = host.split(server.domain_name)[0].replace('.', '')  # extract subdomain, assuming www
 
@@ -58,6 +58,8 @@ class ServerCoreHandler(BaseHTTPRequestHandler):
             handler = www.get_handler()
         elif subdomain == 'bot':
             handler = bot.get_handler()
+        elif subdomain == 'cdn':
+            handler = cdn.get_handler()
 
         if handler:
             if not handler.has_command(command):
