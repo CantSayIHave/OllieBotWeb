@@ -62,6 +62,13 @@ def map_primitive(text: str):
         return text
 
 
+def make_file_safe(path):
+    try:
+        open(path, 'r')
+    except:
+        open(path, 'w').close()
+
+
 def valid_token(token: str):
     return token in discord_tokens
 
