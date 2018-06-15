@@ -9,7 +9,7 @@ import io
 from server.util import *
 from server.exceptions import *
 import server
-from subdomains import www
+from subdomains import www, bot
 
 
 class ServerCoreHandler(BaseHTTPRequestHandler):
@@ -55,7 +55,9 @@ class ServerCoreHandler(BaseHTTPRequestHandler):
         handler = None
 
         if subdomain == 'www' or subdomain == '':
-            handler = www.handler.WWWHandler(self)
+            handler = www.get_handler()
+        elif subdomain == 'bot':
+            handler = bot.get_handler()
 
         if handler:
             if not handler.has_command(command):
@@ -68,7 +70,7 @@ class ServerCoreHandler(BaseHTTPRequestHandler):
             try:
                 command_func()
             except HTTPException as e:
-                self.send_error(e.status, message=e.message)
+                self.send_error(e.status, message=e.message, explain=e.explain)
             except Exception as e:
                 self.send_error(HTTPStatus.BAD_REQUEST,
                                 message='Bad Request - Unknown exception',
@@ -80,7 +82,7 @@ class ServerCoreHandler(BaseHTTPRequestHandler):
 class SubdomainHandler:
     def __init__(self, handler: ServerCoreHandler):
         self.handler = handler
-        self.translated = TranslatedPath(handler.path)
+        self.t_path = TranslatedPath(handler.path)
 
         self.send_response = handler.send_response
         self.send_header = handler.send_header
@@ -99,6 +101,8 @@ class SubdomainHandler:
     def set_file(self, f):
         if isinstance(f, str):
             f = open(f, 'rb')
+        elif isinstance(f, File):
+            f = f.get()
         shutil.copyfileobj(f, self.handler.wfile)
 
     def get_file(self):
@@ -114,6 +118,7 @@ class SubdomainHandler:
         '.py': 'text/plain',
         '.c': 'text/plain',
         '.h': 'text/plain',
+        '.json': 'text/json'
     })
 
 
