@@ -1,15 +1,11 @@
 import http
-from http.server import BaseHTTPRequestHandler
-from http.server import HTTPServer
-from http import HTTPStatus
-import shutil
-import mimetypes
-import io
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from socketserver import ThreadingMixIn
 
 from server.util import *
 from server.exceptions import *
 import server
-from subdomains import www, bot, cdn
+from subdomains import www, bot, cdn, rss
 
 
 class ServerCoreHandler(BaseHTTPRequestHandler):
@@ -52,16 +48,19 @@ class ServerCoreHandler(BaseHTTPRequestHandler):
 
         subdomain = host.split(server.domain_name)[0].replace('.', '')  # extract subdomain, assuming www
 
-        handler = None
+        handler_class = None
 
         if subdomain == 'www' or subdomain == '':
-            handler = www.get_handler()
+            handler_class = www.get_handler()
         elif subdomain == 'bot':
-            handler = bot.get_handler()
+            handler_class = bot.get_handler()
         elif subdomain == 'cdn':
-            handler = cdn.get_handler()
+            handler_class = cdn.get_handler()
+        elif subdomain == 'rss':
+            handler_class = rss.get_handler()
 
-        if handler:
+        if handler_class:
+            handler = handler_class(self)
             if not handler.has_command(command):
                 self.send_error(HTTPStatus.NOT_IMPLEMENTED,
                                 message='This subdomain does not support command {}'.format(command))
@@ -81,58 +80,8 @@ class ServerCoreHandler(BaseHTTPRequestHandler):
             self.send_error(HTTPStatus.NOT_FOUND, message='Not Found')
 
 
-class SubdomainHandler:
-    def __init__(self, handler: ServerCoreHandler):
-        self.handler = handler
-        self.t_path = TranslatedPath(handler.path)
-
-        self.send_response = handler.send_response
-        self.send_header = handler.send_header
-        self.end_headers = handler.end_headers
-        self.date_time_string = handler.date_time_string
-
-    def has_command(self, command: str):
-        return hasattr(self, 'handle_{}'.format(command))
-
-    def command(self, _command):
-        return getattr(self, 'handle_{}'.format(_command), None)
-
-    def __getitem__(self, item):
-        return self.command(item)
-
-    def set_file(self, f):
-        if isinstance(f, str):
-            f = open(f, 'rb')
-        elif isinstance(f, File):
-            f = f.get()
-        shutil.copyfileobj(f, self.handler.wfile)
-
-    def get_file(self):
-        f = io.BytesIO()
-        shutil.copyfileobj(self.handler.rfile, f)
-        return f
-
-    def send_headers(self, file: File):
-        """Adds appropriate headers based on file"""
-
-        content_type = self.extensions_map['.' + file.type]
-
-        self.send_header('Content-Type', content_type)
-        self.send_header('Content-Length', file.size)
-        self.send_header('Last-Modified', self.date_time_string(file.time))
-        self.send_header('Content-Disposition', 'inline; filename="{}"'.format(file.name))
-        self.end_headers()
-
-    if not mimetypes.inited:
-        mimetypes.init()  # try to read system mime.types
-    extensions_map = mimetypes.types_map.copy()
-    extensions_map.update({
-        '': 'text/html',  # Default
-        '.py': 'text/plain',
-        '.c': 'text/plain',
-        '.h': 'text/plain',
-        '.json': 'text/json'
-    })
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
 
 
 def execute(server_class, server_handler):
@@ -142,8 +91,10 @@ def execute(server_class, server_handler):
 
 
 try:
-    execute(HTTPServer, ServerCoreHandler)
+    rss.handler.begin_scraping()
+    execute(ThreadedHTTPServer, ServerCoreHandler)
 except Exception as e:
     print('Critical Exception: {}\n'
           'Shutting down...'
           ''.format(e))
+    rss.handler.stop_scraping()
