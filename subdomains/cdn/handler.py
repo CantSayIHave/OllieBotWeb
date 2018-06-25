@@ -1,11 +1,11 @@
-from servercore import SubdomainHandler
+import subdomains.util as util
 from server.util import *
 from server.exceptions import *
 from globals import *
 from . import registry
 
 
-class CDNHandler(SubdomainHandler):
+class CDNHandler(util.SubdomainHandler):
 
     def handle_GET(self):
         if not registry.allowed(self.t_path.topdir):
@@ -21,8 +21,17 @@ class CDNHandler(SubdomainHandler):
             self.check_key(args, key_perm)
 
             self.t_path.replace('eb', 'eight_ball_im')
+            self.t_path.update('subdomains/bot/' + self.t_path.path)
             self.check_file()
+            self.send_response(HTTPStatus.OK)
             self.send_headers(self.t_path.file)
+            self.set_file(self.t_path.file)
+
+        if self.t_path.topdir == 'ytdl':
+            self.t_path.update('resources/audio/{}'.format(self.t_path.resource))
+            self.check_file()
+            self.send_response(HTTPStatus.OK)
+            self.send_response(self.t_path.file)
             self.set_file(self.t_path.file)
 
     @staticmethod
