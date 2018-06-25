@@ -1,4 +1,4 @@
-from response import Response
+
 from globals import *
 from server.exceptions import *
 from server.util import *
