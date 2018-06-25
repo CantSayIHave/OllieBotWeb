@@ -1,16 +1,19 @@
 from datetime import datetime
+from abc import ABCMeta, abstractmethod
+import random
 
 
-class RssFeed:
+class RssFeed(metaclass=ABCMeta):
     def __init__(self, **kwargs):
         self.id = kwargs.get('id', 0)
 
-        if not self.id:
-            self.id = datetime.now().strftime('%y%m%d%H%M%S')
+        if not self.id:  # datetime + random ensures (good chance of) randomness
+            self.id = datetime.now().strftime('%y%m%d%H%M%S') + str(random.randint(1000, 10000))
 
     def __repr__(self):
         return self.__str__()
 
+    @abstractmethod
     def as_dict(self):
         return {'type': 'RssFeed'}
 
@@ -29,7 +32,8 @@ class TwitterFeed(RssFeed):
 
     def as_dict(self):
         attrs = self.__dict__.copy()
-        return attrs.update({'type': 'TwitterFeed'})
+        attrs.update({'type': 'TwitterFeed'})
+        return attrs
 
 
 class TwitchFeed(RssFeed):
@@ -51,7 +55,8 @@ class TwitchFeed(RssFeed):
 
     def as_dict(self):
         attrs = self.__dict__.copy()
-        return attrs.update({'type': 'TwitchFeed'})
+        attrs.update({'type': 'TwitchFeed'})
+        return attrs
 
 
 class YouTubeFeed(RssFeed):
@@ -71,4 +76,5 @@ class YouTubeFeed(RssFeed):
 
     def as_dict(self):
         attrs = self.__dict__.copy()
-        return attrs.update({'type': 'YouTubeFeed'})
+        attrs.update({'type': 'YouTubeFeed'})
+        return attrs
