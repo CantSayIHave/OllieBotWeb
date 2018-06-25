@@ -65,6 +65,8 @@ class TranslatedPath:
 
         if queries:
             self.queries = dict(x.split('=') for x in queries.split('&'))  # python is magical
+            for q in self.queries:
+                self.queries[q] = self.queries[q].replace('%20', ' ')
 
         _path = self.path
         if _path.startswith('/'):
