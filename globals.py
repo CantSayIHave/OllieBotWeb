@@ -4,15 +4,13 @@
 # global functions, classes, and constants
 
 
-# pulls a tag from http request
-# assumes delimiters are space ' ' and newline '\n'
-
-
-import urllib.parse as urllib
 import ast
-from api_keys import *
-from base64 import b64encode
 import os
+import json
+import urllib.parse as urllib
+from base64 import b64encode
+
+from apis.api_keys import *
 
 
 def http_pull_tag(tag: str, request: str, dl1=' ', dl2='\n') -> str:
@@ -62,11 +60,16 @@ def map_primitive(text: str):
         return text
 
 
-def make_file_safe(path):
+def make_file_safe(path, _json=None, content=None):
     try:
         open(path, 'r')
     except:
-        open(path, 'w').close()
+        f = open(path, 'w')
+        if _json:
+            json.dump(_json, f)
+        if content:
+            f.write(content)
+        f.close()
 
 
 def valid_token(token: str):
